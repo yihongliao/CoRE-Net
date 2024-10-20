@@ -32,9 +32,12 @@ def randomHueSaturationValue(image, hue_shift_limit=(-180, 180),
     if np.random.random() < u:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         h, s, v = cv2.split(image)
+
+        # Apply random hue shift
         hue_shift = np.random.randint(hue_shift_limit[0], hue_shift_limit[1] + 1)
-        hue_shift = np.uint8(hue_shift)
-        h += hue_shift
+        h = h.astype(int) + hue_shift  # Perform the shift with integer values
+        h = np.clip(h, 0, 255).astype(np.uint8)  # Clamp to 0-255 and cast to uint8
+        
         sat_shift = np.random.uniform(sat_shift_limit[0], sat_shift_limit[1])
         s = cv2.add(s, sat_shift)
         val_shift = np.random.uniform(val_shift_limit[0], val_shift_limit[1])
