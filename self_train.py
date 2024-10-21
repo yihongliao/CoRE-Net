@@ -170,7 +170,7 @@ def test(args, solver, writer, record, data_loader, outer_epoch, inner_epoch, mo
 
         train_epoch_loss = train_epoch_loss / len(data_loader_iter)
         iters = outer_epoch * args.total_inner_epoch + inner_epoch
-        evaluation_results = calculate_IoU_Dice(results, gt_seg_maps, logger=log)
+        evaluation_results = calculate_IoU_Dice(results, gt_seg_maps, logger=log, is_printTable=True)
 
         log.info('-'*10)
         log.info(f'{mode}_loss: {train_epoch_loss}')
@@ -256,7 +256,7 @@ def Self_Train(args, solver, trainset, validset, testset, outer_epoch, writer, r
 
         train_epoch_loss = train_epoch_loss / (batch_idx + 1)
         iters = outer_epoch * args.total_inner_epoch + inner_epoch
-        evaluation_results = calculate_IoU_Dice(results, gt_seg_maps, logger=log)
+        evaluation_results = calculate_IoU_Dice(results, gt_seg_maps, logger=log, is_printTable=True)
 
         if args.tensorboard:
             writer.add_image('train_images', show_image[0, :, :, :], iters)

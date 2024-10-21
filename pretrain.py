@@ -301,7 +301,7 @@ def main(args):
 
         train_epoch_loss = train_epoch_loss / len(data_loader_iter)
 
-        evaluation_results = calculate_IoU_Dice(results, gt_seg_maps, logger=log, is_printTable=False)
+        evaluation_results = calculate_IoU_Dice(results, gt_seg_maps, logger=log, is_printTable=True)
         
 
         if args.tensorboard:
