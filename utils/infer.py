@@ -53,6 +53,13 @@ def element_wise_avg(np1, np2):
     return result
 
 def cal_grad(img):
+
+    # Move the tensor to CPU and convert it to NumPy array
+    if isinstance(img, torch.Tensor):
+        img = img.cpu().numpy()
+
+    img = np.squeeze(img)
+
     edge = edge_map(img, sigma=2)
     # calc GVF
     fx, fy = gradient_field(edge)
@@ -89,8 +96,14 @@ def point_refiner(index_infer, mask_coarse_logits, mask_features_list, features_
     R, C, H, W = mask_coarse_logits.shape
     if point_indices == None:
         point_indices = torch.LongTensor(index_infer[0] * W + index_infer[1]).cuda()
+
+    h_step = 1.0 / float(H)
+    w_step = 1.0 / float(W)
+    
+    point_coords = torch.zeros((point_indices.shape[1], 2), dtype=torch.float32).cuda()
     point_coords[:, 0] = w_step / 2.0 + (point_indices % W).to(torch.float) * w_step
     point_coords[:, 1] = h_step / 2.0 + (point_indices // W).to(torch.float) * h_step
+    point_coords = point_coords.view(R, point_indices.shape[1], 2)
 
     fine_grained_features, point_coords_wrt_image = point_sample_fine_grained_features(
         mask_features_list, features_scales, features['logits'], point_coords
@@ -111,14 +124,14 @@ def filling_with_points(mask_coarse_logits, point_logits, index_infer, point_ind
     point_indices = point_indices.unsqueeze(1).expand(-1, C, -1)
     mask_logits = (
         mask_logits.reshape(R, C, H * W)
-        .scatter_(2, point_indices, point_logits.cpu())
+        .scatter_(2, point_indices, point_logits.cuda())
         .view(R, C, H, W)
     )
 
     return mask_logits
 
 
-def CMM(mask_logits):
+def CMM(args, mask_logits):
 
     uncertainty_map = calculate_uncertainty(mask_logits)
     point_indices_uncertain, point_coords = get_uncertain_point_coords_on_grid(
@@ -128,7 +141,7 @@ def CMM(mask_logits):
     return point_indices_uncertain
 
 
-def PCM(pred):
+def PCM(pred, b_map):
     bb_map = np.zeros(b_map.shape)
     bb_map[np.where(b_map > 0.7)] = 1
     bb_map[np.where(b_map < 0.1)] = 1
@@ -205,9 +218,12 @@ def infer_point(args, dataset, solver, threshold, outer_epoch, mode):
                 b_map[pred_map >= threshold['high']] = 1
                 b_map[pred_map <= threshold['low']] = 1
 
-                point_indices_uncertain = CMM(mask_logits)
+                point_indices_uncertain = CMM(args, mask_logits)
                 point_logits = point_refiner(None, mask_coarse_logits, mask_features_list, features_scales, features, solver, point_indices_uncertain)
                 mask_logits = filling_with_points(mask_logits, point_logits, None, point_indices_uncertain)
+
+                # Ensure point_indices_uncertain is a LongTensor
+                point_indices_uncertain = point_indices_uncertain.view(R, 1, -1).long()
 
                 fill_ones = torch.ones(point_indices_uncertain.size())
                 b_map = (
@@ -219,14 +235,17 @@ def infer_point(args, dataset, solver, threshold, outer_epoch, mode):
                 b_map = torch.ones(pred.size())                
                 
             if args.point_correction_on:
-                index_break, index_branching = PCM(pred)
-                point_logits = point_refiner(index_break, mask_coarse_logits, mask_features_list, features_scales, features, solver)
-                mask_logits = filling_with_points(mask_logits, point_logits, index_break)
-                b_map[index_break] = 1
 
-                point_logits = point_refiner(index_branching, mask_coarse_logits, mask_features_list, features_scales, features, solver)
-                mask_logits = filling_with_points(mask_logits, point_logits, index_branching)
-                b_map[index_branching] = 1             
+                index_break, index_branching = PCM(pred, b_map)
+
+                if len(index_break[0]) != 0 and len(index_branching[0]) != 0:                   
+                    point_logits = point_refiner(index_break, mask_coarse_logits, mask_features_list, features_scales, features, solver)
+                    mask_logits = filling_with_points(mask_logits, point_logits, index_break)
+                    b_map[index_break] = 1
+
+                    point_logits = point_refiner(index_branching, mask_coarse_logits, mask_features_list, features_scales, features, solver)
+                    mask_logits = filling_with_points(mask_logits, point_logits, index_branching)
+                    b_map[index_branching] = 1             
 
             b_map = b_map.squeeze().numpy()
             b_map_results.append(b_map)

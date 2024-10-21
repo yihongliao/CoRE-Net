@@ -26,7 +26,7 @@ def gradient_vector_flow(fx, fy, mu, dx=1.0, dy=1.0, verbose=True):
     r = 0.25 # (17) r < 1/4 required for convergence.
     dt = dx*dy/(r*mu)
     # max iteration
-    N = int(max(1, np.sqrt(img.shape[0]*img.shape[1])))
+    N = int(max(1, np.sqrt(fx.shape[0]*fx.shape[1])))
     # initialize u(x, y), v(x, y) by the input.
     curr_u = fx
     curr_v = fy
