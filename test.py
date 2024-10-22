@@ -20,7 +20,7 @@ def parse_args():
     Parse input arguments
     """
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--exp-dir', default='./debug/selftrain', type=str,
+    parser.add_argument('--exp-dir', default='./test/', type=str,
                         help='directory to save results and logs')
     parser.add_argument('--data-root', default='./data/LVD2021', type=str,
                         help='directory to load training or testing data')
@@ -116,7 +116,7 @@ def main(args):
     log.info('========inference end=======')
 
     for i, img in enumerate(trainset.masks):
-        cv2.imwrite(str(i) + '.png', img)
+        cv2.imwrite(xargs.exp_dir + str(i) + '.png', img)
 
 
 if __name__ == '__main__':
