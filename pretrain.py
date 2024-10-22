@@ -159,7 +159,7 @@ def test(args, solver, writer, record, data_loader, epoch, mode='test'):
 
         train_epoch_loss = train_epoch_loss / len(data_loader_iter)
         # train_epoch_iou = train_epoch_iou / len(data_loader.dataset)
-        evaluation_results = calculate_IoU_Dice(results, gt_seg_maps, logger=log)
+        evaluation_results = calculate_IoU_Dice(results, gt_seg_maps, logger=log, is_printTable=False)
 
         log.info('-'*10)
         log.info(f'{mode}_loss: {train_epoch_loss}')
@@ -301,7 +301,7 @@ def main(args):
 
         train_epoch_loss = train_epoch_loss / len(data_loader_iter)
 
-        evaluation_results = calculate_IoU_Dice(results, gt_seg_maps, logger=log, is_printTable=True)
+        evaluation_results = calculate_IoU_Dice(results, gt_seg_maps, logger=log, is_printTable=False)
         
 
         if args.tensorboard:
