@@ -112,10 +112,10 @@ def main(args):
     log.info('done!')
 
     log.info('========start inference=======')
-    trainset = my_infer.infer_labels(args, testset, testset, solver, 0)
+    testset = my_infer.infer_labels(args, testset, testset, solver, 0)
     log.info('========inference end=======')
 
-    for i, img in enumerate(trainset.masks):
+    for i, img in enumerate(testset.masks):
         cv2.imwrite(xargs.exp_dir + str(i) + '.png', img)
 
 
