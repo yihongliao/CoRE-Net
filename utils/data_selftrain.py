@@ -379,7 +379,7 @@ class ImageFolder(data.Dataset):
                      '18_PhloxPaniculata', '19_CallistephusChinensis', '20_MapleTree', '21_Amaranth',
                      '22_Honeysuckle', '23_SweetPotato', '24_Cedar', '25_Thistle', '26_MirabilisJalapa',
                      '27_Sycamores', '28_Lilac', '29_Persimmon', '30_Mulberry', '31_SichuanPepper',
-                     '32_VitexNegundoVar', '33_MagnoliaDenudata', '34_ChineseRose', '35_Elm', '36_Holly']
+                     '32_VitexNegundoVar', '33_MagnoliaDenudata', '34_ChineseRose', '35_Elm', '36_Holly', '37_Sugar']
         for i in range(len(name_list)):
             name_list[i] = name_list[i] + '_labels'
         assert self.dataset in name_list, "the dataset should be within range"
